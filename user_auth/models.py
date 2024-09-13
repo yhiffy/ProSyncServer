@@ -1,9 +1,5 @@
-from datetime import timedelta
-
 from django.db import models
 import uuid
-
-from django.utils import timezone
 
 
 # Create your models here.
@@ -12,29 +8,29 @@ class User(models.Model):
 
     id = models.UUIDField(primary_key = True, default = uuid.uuid4, editable = False, db_index = True)
     email = models.EmailField(unique = True)
-    googleId = models.CharField(unique = True, null = True, blank = True)
+    google_id = models.CharField(unique = True, null = True, blank = True)
     password = models.CharField(null = False, blank = False)
-    fullName = models.CharField(max_length = 255)
+    full_name = models.CharField(max_length = 255)
     age = models.IntegerField()
     address = models.CharField(max_length = 255)
     phone = models.CharField(max_length = 15)
 
-    isStaff = models.BooleanField(default = False)
-    isActive = models.BooleanField(default=False)
-    isDeleted = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default = False)
+    is_active = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
 
-    activationToken = models.CharField(blank = True, null = True, max_length = 255)
-    activationTokenExpires = models.DateTimeField(default = timezone.now() + timedelta(minutes = 30))
+    activation_token = models.CharField(blank = True, null = True, max_length = 255)
+    activation_token_expires = models.TimeField(blank = True, null = True)
 
-    resetPasswordToken = models.CharField(blank = True, null = True, max_length = 255)
-    resetPasswordExpires = models.TimeField(blank = True, null = True)
+    reset_password_token = models.CharField(blank = True, null = True, max_length = 255)
+    reset_password_expires = models.TimeField(blank = True, null = True)
 
-    createdAt = models.DateTimeField(auto_now_add = True)
-    updatedAt = models.DateTimeField(auto_now = True)
+    created_at = models.DateTimeField(auto_now_add = True)
+    updated_at = models.DateTimeField(auto_now = True)
 
 
     def __str__(self):
-        return self.fullName
+        return self.full_name
 
     class Meta:
         verbose_name_plural = "users"
