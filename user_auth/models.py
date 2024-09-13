@@ -23,18 +23,18 @@ class User(models.Model):
     isActive = models.BooleanField(default=False)
     isDeleted = models.BooleanField(default=False)
 
-    activationToken = models.CharField()
+    activationToken = models.CharField(blank = True, null = True, max_length = 255)
     activationTokenExpires = models.DateTimeField(default = timezone.now() + timedelta(minutes = 30))
 
-    resetPasswordToken = models.BooleanField()
-    resetPasswordExpires = models.TimeField()
+    resetPasswordToken = models.CharField(blank = True, null = True, max_length = 255)
+    resetPasswordExpires = models.TimeField(blank = True, null = True)
 
     createdAt = models.DateTimeField(auto_now_add = True)
     updatedAt = models.DateTimeField(auto_now = True)
 
 
     def __str__(self):
-        return self.email
+        return self.fullName
 
     class Meta:
         verbose_name_plural = "users"
