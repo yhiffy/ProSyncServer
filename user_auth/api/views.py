@@ -13,6 +13,7 @@ class LoginView(APIView):
 
     def post(self, request, *args, **kwargs):
 
+
         email = request.data.get('email')
         password = request.data.get('password')
 
@@ -30,9 +31,9 @@ class LoginView(APIView):
 
         try:
 
-            # hash_password = bcrypt.hashpw(existing_user.password.encode('utf-8'), bcrypt.gensalt(10))
+            hash_password = bcrypt.hashpw(existing_user.password.encode('utf-8'), bcrypt.gensalt(10))
 
-            correct_password = bcrypt.checkpw(password.encode('utf-8'), existing_user.password.encode('utf-8'))
+            correct_password = bcrypt.checkpw(password.encode('utf-8'), hash_password)
 
             if correct_password:
                 payload = {
