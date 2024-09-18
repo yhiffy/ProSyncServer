@@ -11,7 +11,7 @@ class User(models.Model):
     google_id = models.CharField(unique = True, null = True, blank = True)
     password = models.CharField(null = False, blank = False)
     full_name = models.CharField(max_length = 255)
-    age = models.IntegerField()
+    age = models.IntegerField(null=True)
     address = models.CharField(max_length = 255)
     phone = models.CharField(max_length = 15)
 
