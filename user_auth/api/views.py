@@ -8,6 +8,7 @@ import bcrypt
 import jwt
 from .utils import gen_jwt, get_token, get_user_info
 from .serializers import UserSerializer
+from django.shortcuts import redirect
 
 # Create your views here.
 
