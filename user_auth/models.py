@@ -9,7 +9,7 @@ class User(models.Model):
     id = models.UUIDField(primary_key = True, default = uuid.uuid4, editable = False, db_index = True)
     email = models.EmailField(unique = True)
     google_id = models.CharField(unique = True, null = True, blank = True)
-    password = models.CharField(null = False, blank = False)
+    password = models.CharField()
     full_name = models.CharField(max_length = 255)
     age = models.IntegerField()
     address = models.CharField(max_length = 255)
