@@ -86,14 +86,18 @@ class GoogleCallbackView(APIView):
 
                 jwt_token = gen_jwt(str(existing_user.id), existing_user.email, existing_user.is_staff)
 
-                return Response({"token": jwt_token, "message": "Successful login"}, status=status.HTTP_200_OK)
+                url_wz_token = f'{settings.FRONTEND_URL}?token={jwt_token}'
+                return redirect (url_wz_token)
+
 
 #             如果没有已存在的用户
             serializer = UserSerializer(data={'google_id': google_id, 'email': email, 'full_name': name})
             if serializer.is_valid():
                 new_user = serializer.save()
                 jwt_token = gen_jwt(str(new_user.id), new_user.email, new_user.is_staff)
-                return Response({"token": jwt_token, "message": "Successful login"}, status=status.HTTP_200_OK)
+
+                url_wz_token = f'{settings.FRONTEND_URL}?token={jwt_token}'
+                return redirect (url_wz_token)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
