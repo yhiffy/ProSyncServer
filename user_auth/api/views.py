@@ -9,6 +9,8 @@ import jwt
 from .utils import gen_jwt, get_token, get_user_info
 from .serializers import UserSerializer
 from django.shortcuts import redirect
+from django.http import JsonResponse
+
 
 # Create your views here.
 
@@ -40,10 +42,18 @@ class LoginView(APIView):
 
             if correct_password:
 
-                token = gen_jwt(str(existing_user.id), existing_user.email, existing_user.is_staff )
+                jwt_token = gen_jwt(str(existing_user.id), existing_user.email, existing_user.is_staff )
 
-                return Response({'token': token, "message": "Login Successful"},
-                                status=status.HTTP_200_OK)
+                response = JsonResponse({"message": "Login Successful"})
+                response.set_cookie(
+                    key="jwt_token",
+                    value=jwt_token,
+                    httponly=True,
+                    secure=True,
+                    samesite='Lax'
+                )
+
+                return response
 
             else:
                 return Response ('Incorrect Password',
@@ -87,8 +97,14 @@ class GoogleCallbackView(APIView):
 
                 jwt_token = gen_jwt(str(existing_user.id), existing_user.email, existing_user.is_staff)
 
-                url_wz_token = f'{settings.FRONTEND_URL}?token={jwt_token}'
-                return redirect (url_wz_token)
+                response = JsonResponse({"message": "Login Successful"})
+                response.set_cookie(key="jwt_token",
+                                    value=jwt_token,
+                                    httponly=True,
+                                    secure=True,
+                                    samesite='Lax')
+
+                return response
 
 
 #             如果没有已存在的用户
@@ -97,8 +113,14 @@ class GoogleCallbackView(APIView):
                 new_user = serializer.save()
                 jwt_token = gen_jwt(str(new_user.id), new_user.email, new_user.is_staff)
 
-                url_wz_token = f'{settings.FRONTEND_URL}?token={jwt_token}'
-                return redirect (url_wz_token)
+                response = JsonResponse({"message": "Login Successful"})
+                response.set_cookie(key="jwt_token",
+                                    value=jwt_token,
+                                    httponly=True,
+                                    secure=True,
+                                    samesite='Lax')
+
+                return response
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
