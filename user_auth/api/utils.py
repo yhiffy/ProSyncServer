@@ -34,18 +34,18 @@ def get_token(code):
         }
 
     token_response = requests.post(token_url, token_data).json()
+    access_token = token_response['access_token']
 
     if 'error' in token_response:
         return Response({'message': 'Error getting token'},status=status.HTTP_400_BAD_REQUEST)
 
-    return token_response
+    return access_token
 
 def get_user_info(access_token):
 
     userinfo_url = 'https://www.googleapis.com/oauth2/v3/userinfo'
-    userinfo_response = requests.get(userinfo_url, headers={'Authorization': f'Bearer {access_token}'})
 
-    print("-----------------------", userinfo_response.text)
+    userinfo_response = requests.get(userinfo_url, headers={'Authorization': f'Bearer {access_token}'}).json()
 
     if 'error' in userinfo_response:
         return Response({'message': 'Error getting userinfo'},status=status.HTTP_400_BAD_REQUEST)

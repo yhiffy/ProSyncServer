@@ -28,8 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
-GOOGLE_CLIENT_ID = '77047470781-mbinq8n21d6tbuthc00odnevsl4rmb0l.apps.googleusercontent.com'
+GOOGLE_CLIENT_ID =  '77047470781-mbinq8n21d6tbuthc00odnevsl4rmb0l.apps.googleusercontent.com'
 GOOGLE_CLIENT_SECRET = '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'
 GOOGLE_REDIRECT_URI = 'http://localhost:8000/api/auth/google/callback/'
 
