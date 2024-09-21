@@ -1,3 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.env
+.Python
+env/
 venv/
+ENV/
 
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/
 
+# Migrations
+*/migrations/*.py
+!*/migrations/__init__.py
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Local settings
+local_settings.py
+
+# Python dependency management
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Python build directories
+build/
+dist/
