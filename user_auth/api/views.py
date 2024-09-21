@@ -42,16 +42,10 @@ class LoginView(APIView):
 
                 jwt_token = gen_jwt(str(existing_user.id), existing_user.email, existing_user.is_staff )
 
-                response = redirect(settings.FRONTEND_URL)
-                response.set_cookie(
-                    key="jwt_token",
-                    value=jwt_token,
-                    httponly=True,
-                    secure=True,
-                    samesite='Lax'
-                )
-
-                return response
+                return Response({
+                    "message": "Login successful",
+                    "token": jwt_token
+                }, status=status.HTTP_200_OK)
 
             else:
                 return Response ('Incorrect Password',
@@ -60,15 +54,24 @@ class LoginView(APIView):
         except Exception as e:
             print(f"Internal server error: {e}")
             return Response("Internal Server Error", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class test(APIView):
+    def get(self):
+        print('test')
+
 
 class GoogleCallbackView(APIView):
 
     def get(self, request):
 
+        print('connected')
+
         try:
             code = request.GET.get('code')
             if not code:
                 return Response({'message': 'Missing code'}, status=status.HTTP_400_BAD_REQUEST)
+
+            print(code)
 
             access_token = get_token(code)
             if not access_token:
@@ -116,7 +119,7 @@ class GoogleCallbackView(APIView):
                                     value=jwt_token,
                                     httponly=True,
                                     secure=True,
-                                    samesite='Lax')
+                                    samesite='None')
                 return response
 
             else:

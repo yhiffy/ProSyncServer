@@ -17,8 +17,6 @@ def gen_jwt(id, email, is_staff):
 
     jwt_token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
-    print('jwt_token')
-
     return jwt_token
 
 def get_token(code):
