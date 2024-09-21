@@ -1,11 +1,32 @@
+# Virtual environment
 venv/
 
-*.log
-
+# Python compiled files
 *.pyc
 __pycache__/
 
+# Local database
+*.sqlite3
+
+# Logs
+*.log
+
+# Static files
+staticfiles/
+
+# Media files
+media/
+
+# Migrations auto files
 migrations/*-auto-*.py
 
+# IDE files
+.idea/
+
+# Environment variables
+.env
+
+# Temporary system files
 *.DS_Store
 Thumbs.db
+
