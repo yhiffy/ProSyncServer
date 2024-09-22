@@ -28,6 +28,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+GOOGLE_CLIENT_ID =  '77047470781-mbinq8n21d6tbuthc00odnevsl4rmb0l.apps.googleusercontent.com'
+GOOGLE_CLIENT_SECRET = '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'
+GOOGLE_REDIRECT_URI = 'http://localhost:8000/api/auth/google/callback/'
 
 # Application definition
 
@@ -43,15 +46,15 @@ INSTALLED_APPS = [
     'user_auth',
 ]
 
-CORS_ALLOWED_ORIGINS = ['http://localhost:3000']
 CORS_ALLOW_CREDENTIALS = True
+FRONTEND_URL = 'http://localhost:3000/'
 
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -137,4 +140,23 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = ['http://localhost:3000']
+CORS_ALLOWED_ORIGINS = 'http://localhost:3000',
+   
+    
+
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+]
+
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'authorization',
+    'x-csrftoken',
+    'accept',
+    'origin',
+]
