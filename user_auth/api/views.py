@@ -6,10 +6,15 @@ from rest_framework.views import APIView
 from ..models import User
 import bcrypt
 import jwt
+from jwt import ExpiredSignatureError
 from uuid import uuid4
 from django.contrib.auth.hashers import make_password
 from django.core.mail import EmailMessage
-
+from django.conf import settings
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from rest_framework_simplejwt.tokens import RefreshToken
+import requests
 
 
 # Create your views here.
@@ -66,7 +71,7 @@ class RegisterView(APIView):
 
     def post(self, request):
         data = request.data
-        full_name = data.get('full_name')
+        full_name = data.get('fullName')
         email = data.get('email')
         password = data.get('password')
         phone = data.get('phone')
@@ -126,14 +131,16 @@ class RegisterView(APIView):
 class ActivateView(APIView):
 
     def post(self, request):
-        token = request.query
+        token = request.query_params.get('token')
         if not token:
             return Response({"message": "Token is missing"}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            decoded = jwt.decode(token, settings.SECRET_KEY, algorithm="HS256")
-            
-            existing_user = User.objects.get(email=decoded.email)
+
+            decoded = jwt.decode(token, settings.SECRET_KEY,algorithms=["HS256"])
+       
+            email = decoded.get('email')
+            existing_user = User.objects.get(email=email)
             if not existing_user:
                 return Response({'message': 'Invalid token'},status=status.HTTP_404_NOT_FOUND)
             
@@ -147,8 +154,125 @@ class ActivateView(APIView):
 
             return Response({"message": "User activated successfully."}, status=status.HTTP_200_OK)
         
+        except ExpiredSignatureError:
+            return Response({"message": "The activation token has expired."}, status=status.HTTP_401_UNAUTHORIZED)
+        
+
+        except jwt.InvalidTokenError as e:
+            return Response({"message": f"Invalid token: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception as e:
+            print(f"Error: {e}")
+            return Response({"message": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class UserInfoView(APIView):
+
+    def get(self, request):
+        token = request.query_params.get('token')
+        if not token:
+            return Response({"message": "Token is missing"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            decoded = jwt.decode(token, settings.SECRET_KEY,algorithms=["HS256"])
+       
+            email = decoded.get('email')
+            existing_user = User.objects.get(email=email)
+            if not existing_user:
+                return Response({'message': 'Invalid token'},status=status.HTTP_404_NOT_FOUND)
+            
+     
+            return Response({"email":existing_user.email,"isActive":existing_user.is_active}, status=status.HTTP_200_OK)
+        
+        except ExpiredSignatureError:
+            return Response({"message": "The activation token has expired."}, status=status.HTTP_401_UNAUTHORIZED)
+     
         except Exception as e:
             print(f"Error: {e}")
             return Response({"message": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
  
+class GoogleLoginView(APIView):
+    def post(self, request):
+        # token = request.data.get('token')
+        # if not token:
+        #     return Response({'message': 'Token is missing'}, status=status.HTTP_400_BAD_REQUEST)
+
+        code = request.data.get('code')
+        if not code:
+            return Response({'message': 'Authorization code is missing'}, status=status.HTTP_400_BAD_REQUEST)
+
+        token_url = 'https://oauth2.googleapis.com/token'
+        data = {
+            'client_id': settings.GOOGLE_CLIENT_ID,
+            'client_secret': settings.GOOGLE_CLIENT_SECRET,
+            'code': code,
+            'grant_type': 'authorization_code',
+            'redirect_uri': settings.GOOGLE_REDIRECT_URI,
+        }
+
+        response = requests.post(token_url, data=data)
+        if response.status_code == 200:
+            tokens = response.json()
+            token = tokens.get('id_token')
+
+        try:
+            # verify Google ID token
+            idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), settings.GOOGLE_CLIENT_ID)
+            if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+                raise ValueError('Wrong issuer.')
+        except ValueError:
+            return Response({'message': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # get Google user info
+        email = idinfo.get('email')
+        full_name = idinfo.get('name')
+        google_id = idinfo.get('sub')
+
+        # find/create user
+        try:
+            user = User.objects.get(email=email)
+            if not user.google_id:
+                    # Update googleId to the original user
+                    user.google_id = google_id
+                    user.is_active = True
+                    if not user.full_name:
+                        user.full_name = full_name 
+                    user.save()
+
+        except User.DoesNotExist:
+            user_uid = str(uuid4())
+            user = User.objects.create(
+                id=user_uid,
+                email=email,
+                is_active=True,
+                google_id=google_id,
+                full_name=full_name
+            )
+
+            mail_subject = "Welcome to ProSync"
+            message = f"""
+            <h1>Welcome!</h1>
+            <p>Thank you for signing up with our service!</p>
+            """
+
+            email_message = EmailMessage(
+                mail_subject, message, to=[email]
+            )
+            email_message.content_subtype = "html" 
+            email_message.send()
+
+        # create JWT token
+        payload = {
+                'userUId': str(user.id),  
+                'email': user.email,
+                'exp': datetime.utcnow() + timedelta(hours=2) 
+            }
+        
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+
+
+        return Response({
+                'message': 'Google login successful',
+                'token': token
+            }, status=status.HTTP_200_OK)
+
