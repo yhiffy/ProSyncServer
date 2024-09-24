@@ -14,6 +14,7 @@ class User(models.Model):
     age = models.IntegerField(null = True, blank = True)
     address = models.CharField(max_length = 255, null = True, blank = True)
     phone = models.CharField(max_length = 15, null = True, blank = True)
+    avatar_url = models.URLField(max_length=500, null=True, blank=True)
 
     is_staff = models.BooleanField(default = False)
     is_active = models.BooleanField(default=False)

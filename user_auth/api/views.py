@@ -224,6 +224,7 @@ class GoogleLoginView(APIView):
         email = idinfo.get('email')
         full_name = idinfo.get('name')
         google_id = idinfo.get('sub')
+        avatar_url = idinfo.get('picture')
 
         # find/create user
         try:
@@ -233,7 +234,9 @@ class GoogleLoginView(APIView):
                     user.google_id = google_id
                     user.is_active = True
                     if not user.full_name:
-                        user.full_name = full_name 
+                        user.full_name = full_name
+                    if not user.avatar_url:
+                        user.avatar_url = avatar_url 
                     user.save()
 
         except User.DoesNotExist:
@@ -243,7 +246,8 @@ class GoogleLoginView(APIView):
                 email=email,
                 is_active=True,
                 google_id=google_id,
-                full_name=full_name
+                full_name=full_name,
+                avatar_url = avatar_url
             )
 
             mail_subject = "Welcome to ProSync"
