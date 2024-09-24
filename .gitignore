@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyc
 
 # Environments
 .env
@@ -40,7 +41,6 @@ pip-delete-this-directory.txt
 build/
 dist/
 
-# Ignore Python bytecode files
-__pycache__/
-*.pyc
+
+
 
