@@ -15,7 +15,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from rest_framework_simplejwt.tokens import RefreshToken
 import requests
-
+from .utils import gen_jwt, get_token, get_user_info
 
 # Create your views here.
 
@@ -46,16 +46,13 @@ class LoginView(APIView):
             correct_password = bcrypt.checkpw(password.encode('utf-8'), hash_password)
 
             if correct_password:
-                payload = {
-                    'user_id': str(existing_user.id),
-                    'email':existing_user.email,
-                    'is_staff': existing_user.is_staff,
-                    'exp': datetime.utcnow() + timedelta(hours=1)}
 
-                token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+                jwt_token = gen_jwt(str(existing_user.id), existing_user.email, existing_user.is_staff )
 
-                return Response({'token': token, "message": "Login Successful"},
-                                status=status.HTTP_200_OK)
+                return Response({
+                    "message": "Login successful",
+                    "token": jwt_token
+                }, status=status.HTTP_200_OK)
 
             else:
                 return Response ('Incorrect Password',
@@ -64,7 +61,10 @@ class LoginView(APIView):
         except Exception as e:
             print(f"Internal server error: {e}")
             return Response("Internal Server Error", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+        
+class test(APIView):
+    def get(self):
+        print('test')
 
 
 class RegisterView(APIView):
