@@ -193,9 +193,6 @@ class UserInfoView(APIView):
  
 class GoogleLoginView(APIView):
     def post(self, request):
-        # token = request.data.get('token')
-        # if not token:
-        #     return Response({'message': 'Token is missing'}, status=status.HTTP_400_BAD_REQUEST)
 
         code = request.data.get('code')
         if not code:
