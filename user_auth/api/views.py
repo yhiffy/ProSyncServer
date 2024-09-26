@@ -8,7 +8,7 @@ import bcrypt
 import jwt
 from jwt import ExpiredSignatureError
 from uuid import uuid4
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password,check_password
 from django.core.mail import EmailMessage
 from django.conf import settings
 from google.oauth2 import id_token
@@ -26,6 +26,8 @@ class LoginView(APIView):
 
         email = request.data.get('email')
         password = request.data.get('password')
+        print(email)
+        print(password)
 
         if not email or not password:
 
@@ -40,10 +42,7 @@ class LoginView(APIView):
                             status=status.HTTP_404_NOT_FOUND)
 
         try:
-
-            hash_password = bcrypt.hashpw(existing_user.password.encode('utf-8'), bcrypt.gensalt(10))
-
-            correct_password = bcrypt.checkpw(password.encode('utf-8'), hash_password)
+            correct_password = check_password(password, existing_user.password)
 
             if correct_password:
 
@@ -51,7 +50,9 @@ class LoginView(APIView):
 
                 return Response({
                     "message": "Login successful",
-                    "token": jwt_token
+                    "token": jwt_token,
+                    "full_name":existing_user.full_name,
+                    "avatar_url":existing_user.avatar_url
                 }, status=status.HTTP_200_OK)
 
             else:
@@ -274,6 +275,8 @@ class GoogleLoginView(APIView):
 
         return Response({
                 'message': 'Google login successful',
-                'token': token
+                'token': token,
+                'avatar_url':user.avatar_url,
+                'full_name':user.full_name
             }, status=status.HTTP_200_OK)
 
