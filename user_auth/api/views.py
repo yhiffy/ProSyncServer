@@ -62,9 +62,9 @@ class LoginView(APIView):
             print(f"Internal server error: {e}")
             return Response("Internal Server Error", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-class test(APIView):
-    def get(self):
-        print('test')
+# class test(APIView):
+#     def get(self):
+#         print('test')
 
 
 class RegisterView(APIView):
@@ -193,6 +193,7 @@ class UserInfoView(APIView):
  
 class GoogleLoginView(APIView):
     def post(self, request):
+        print("GOOGLE_CLIENT_ID in view:", settings.GOOGLE_CLIENT_ID)
 
         code = request.data.get('code')
         if not code:
