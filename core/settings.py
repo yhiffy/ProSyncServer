@@ -34,7 +34,9 @@ ALLOWED_HOSTS = []
 
 GOOGLE_CLIENT_ID =  '705854832883-osg63mg04ssiji5ie65hmuldrecoup74.apps.googleusercontent.com'
 GOOGLE_CLIENT_SECRET = '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'
-GOOGLE_REDIRECT_URI = 'http://localhost:8000/api/auth/google/callback/'
+GOOGLE_REDIRECT_URI = 'http://localhost:3000/google-callback'
+# GOOGLE_REDIRECT_URI = os.getenv('GOOGLE_REDIRECT_URI')
+
 
 # Application definition
 
@@ -132,6 +134,7 @@ USE_I18N = True
 
 USE_TZ = True
 
+FRONTEND_URL = 'http://localhost:3000/'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -166,7 +169,8 @@ SIMPLE_JWT = {
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': os.getenv('SECRET_KEY'),
 }
-    
+
+CORS_ALLOWED_ORIGINS = 'http://localhost:3000',    
 
 CORS_ALLOW_METHODS = [
     'GET',

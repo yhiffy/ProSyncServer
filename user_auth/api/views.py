@@ -16,6 +16,7 @@ from google.auth.transport import requests as google_requests
 from rest_framework_simplejwt.tokens import RefreshToken
 import requests
 from .utils import gen_jwt, get_token, get_user_info
+from django.shortcuts import redirect
 
 # Create your views here.
 
@@ -26,8 +27,6 @@ class LoginView(APIView):
 
         email = request.data.get('email')
         password = request.data.get('password')
-        print(email)
-        print(password)
 
         if not email or not password:
 
@@ -62,11 +61,6 @@ class LoginView(APIView):
         except Exception as e:
             print(f"Internal server error: {e}")
             return Response("Internal Server Error", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-# class test(APIView):
-#     def get(self):
-#         print('test')
-
 
 class RegisterView(APIView):
 
@@ -273,6 +267,14 @@ class GoogleLoginView(APIView):
         
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
+        # response = redirect(settings.FRONTEND_URL)
+        # response.set_cookie(key="jwt_token",
+        #                             value=token,
+        #                             httponly=True,
+        #                             secure=True,
+        #                             samesite='Lax')
+
+        # return response
 
         return Response({
                 'message': 'Google login successful',
