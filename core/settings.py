@@ -34,7 +34,7 @@ ALLOWED_HOSTS = []
 
 GOOGLE_CLIENT_ID =  '705854832883-osg63mg04ssiji5ie65hmuldrecoup74.apps.googleusercontent.com'
 GOOGLE_CLIENT_SECRET = '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'
-GOOGLE_REDIRECT_URI = 'http://localhost:3000/google-callback'
+# GOOGLE_REDIRECT_URI = 'http://localhost:3000/google-callback'
 # GOOGLE_REDIRECT_URI = os.getenv('GOOGLE_REDIRECT_URI')
 
 
