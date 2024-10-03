@@ -17,6 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 import requests
 from .utils import gen_jwt, get_token, get_user_info
 from django.shortcuts import redirect
+from django.core.files.storage import default_storage
 
 # Create your views here.
 
@@ -188,8 +189,6 @@ class UserInfoView(APIView):
  
 class GoogleLoginView(APIView):
     def post(self, request):
-        print("GOOGLE_CLIENT_ID in view:", settings.GOOGLE_CLIENT_ID)
-
         code = request.data.get('code')
         if not code:
             return Response({'message': 'Authorization code is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -267,19 +266,20 @@ class GoogleLoginView(APIView):
         
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
-        # response = redirect(settings.FRONTEND_URL)
-        # response.set_cookie(key="jwt_token",
-        #                             value=token,
-        #                             httponly=True,
-        #                             secure=True,
-        #                             samesite='Lax')
-
-        # return response
-
         return Response({
                 'message': 'Google login successful',
                 'token': token,
                 'avatar_url':user.avatar_url,
                 'full_name':user.full_name
             }, status=status.HTTP_200_OK)
+    
+class ChangeAvatar(APIView):
+    def post(self, request):
+        user = request.user
+        avatar = request.FILES.get('avatar')
+
+        if not avatar:
+            return Response({'message': 'No avatar uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user.avatar_url = default_storage.save(f'avatars/{user.id}/{avatar.name}', avatar)
 
