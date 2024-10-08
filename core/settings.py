@@ -32,8 +32,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-GOOGLE_CLIENT_ID =  '77047470781-mbinq8n21d6tbuthc00odnevsl4rmb0l.apps.googleusercontent.com'
-GOOGLE_CLIENT_SECRET = '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'
+GOOGLE_CLIENT_ID =  '705854832883-osg63mg04ssiji5ie65hmuldrecoup74.apps.googleusercontent.com'
+GOOGLE_CLIENT_SECRET = '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'
 
 # Application definition
 
@@ -132,6 +132,7 @@ USE_I18N = True
 
 USE_TZ = True
 
+FRONTEND_URL = 'http://localhost:3000/'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -166,7 +167,8 @@ SIMPLE_JWT = {
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': os.getenv('SECRET_KEY'),
 }
-    
+
+CORS_ALLOWED_ORIGINS = 'http://localhost:3000',    
 
 CORS_ALLOW_METHODS = [
     'GET',
@@ -184,3 +186,6 @@ CORS_ALLOW_HEADERS = [
     'accept',
     'origin',
 ]
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'

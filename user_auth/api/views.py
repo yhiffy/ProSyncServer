@@ -3,6 +3,7 @@ from django.conf import settings
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from ..models import User
 import bcrypt
 import jwt
@@ -16,6 +17,8 @@ from google.auth.transport import requests as google_requests
 from rest_framework_simplejwt.tokens import RefreshToken
 import requests
 from .utils import gen_jwt, get_token, get_user_info
+from django.shortcuts import redirect
+from django.core.files.storage import default_storage
 
 # Create your views here.
 
@@ -26,8 +29,6 @@ class LoginView(APIView):
 
         email = request.data.get('email')
         password = request.data.get('password')
-        print(email)
-        print(password)
 
         if not email or not password:
 
@@ -62,11 +63,6 @@ class LoginView(APIView):
         except Exception as e:
             print(f"Internal server error: {e}")
             return Response("Internal Server Error", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-class test(APIView):
-    def get(self):
-        print('test')
-
 
 class RegisterView(APIView):
 
@@ -182,7 +178,7 @@ class UserInfoView(APIView):
                 return Response({'message': 'Invalid token'},status=status.HTTP_404_NOT_FOUND)
             
      
-            return Response({"email":existing_user.email,"isActive":existing_user.is_active}, status=status.HTTP_200_OK)
+            return Response({"email":existing_user.email,"isActive":existing_user.is_active, 'name': existing_user.full_name, 'avatar': existing_user.avatar_url}, status=status.HTTP_200_OK)
         
         except ExpiredSignatureError:
             return Response({"message": "The activation token has expired."}, status=status.HTTP_401_UNAUTHORIZED)
@@ -194,7 +190,6 @@ class UserInfoView(APIView):
  
 class GoogleLoginView(APIView):
     def post(self, request):
-
         code = request.data.get('code')
         if not code:
             return Response({'message': 'Authorization code is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -265,13 +260,13 @@ class GoogleLoginView(APIView):
 
         # create JWT token
         payload = {
-                'userUId': str(user.id),  
+                'id': str(user.id),  
                 'email': user.email,
-                'exp': datetime.utcnow() + timedelta(hours=2) 
+                'token_type': 'access',
+                'exp': datetime.utcnow() + timedelta(hours=1) 
             }
         
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-
 
         return Response({
                 'message': 'Google login successful',
@@ -279,4 +274,29 @@ class GoogleLoginView(APIView):
                 'avatar_url':user.avatar_url,
                 'full_name':user.full_name
             }, status=status.HTTP_200_OK)
+    
+class ChangeAvatarView(APIView):
+    def post(self, request):
+        token = request.data.get('token')
+        avatar = request.FILES.get('avatar')
 
+        if not avatar:
+            return Response({'message': 'No avatar uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            user_id = decoded.get('user_id')
+            existing_user = User.objects.get(id=user_id)
+            
+            default_storage.save(f'avatars/{existing_user.id}/{avatar.name}', avatar)
+            existing_user.avatar_url = f'{settings.MEDIA_URL}avatars/{existing_user.id}/{avatar.name}'
+            existing_user.save()
+
+            return Response({'message': 'Avatar updated successfully'}, status=status.HTTP_200_OK)
+        
+        except jwt.ExpiredSignatureError:
+            return Response({'message': 'Token has expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        except jwt.DecodeError:
+            return Response({'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
+        except User.DoesNotExist:
+            return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
