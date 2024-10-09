@@ -9,7 +9,7 @@ from rest_framework import status
 def gen_jwt(id, email, is_staff):
 
     payload = {
-        "user_id": id,
+        "id": id,
         "email": email,
         "is_staff": is_staff,
         "exp": datetime.utcnow() + timedelta(hours=1)

@@ -30,7 +30,7 @@ for _ in range(10):
     users.append(user)  
 
 
-for _ in range(5):
+for _ in range(60):
     job = Job.objects.create(
         title=fake.job(),
         company=fake.company(),
