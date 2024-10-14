@@ -285,7 +285,7 @@ class ChangeAvatarView(APIView):
         
         try:
             decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-            user_id = decoded.get('user_id')
+            user_id = decoded.get('id')
             existing_user = User.objects.get(id=user_id)
             
             default_storage.save(f'avatars/{existing_user.id}/{avatar.name}', avatar)
