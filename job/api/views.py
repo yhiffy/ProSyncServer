@@ -11,8 +11,8 @@ class SearchKeyWordView(APIView):
 
     def get(self, request):
         q = request.query_params.get('q')
-        if not q:
-            return Response({"message": "keyword is missing"}, status=status.HTTP_400_BAD_REQUEST)
+        # if not q:
+        #     return Response({"message": "keyword is missing"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             #filter from all CharField and TextField
@@ -21,10 +21,25 @@ class SearchKeyWordView(APIView):
                 if isinstance(field, (CharField, TextField)):  
                     query |= Q(**{f"{field.name}__icontains": q})
 
+            # Pagination parameters: page number and page size
+            page_size = 10  
+            page = int(request.query_params.get('page', 1))  
+
+            # Calculate offset and limit for the query
+            offset = (page - 1) * page_size
+            limit = offset + page_size
+
+            # Total number of matching jobs
+            total_jobs_count = Job.objects.filter(query).count()
+
+            # Calculate result range (e.g., "Showing results 1 - 10 out of 90")
+            start_result = 1
+            end_result = min(limit, total_jobs_count)
+
             #order the result: title includes keyword will be in the front 
             matching_jobs = Job.objects.filter(query).annotate(
                 is_in_title=Coalesce(Q(title__icontains=q), Value(False), output_field=BooleanField())
-            ).order_by('-is_in_title').distinct() 
+            ).order_by('-is_in_title', '-posted_date').distinct()[offset:limit]
     
             if not matching_jobs.exists():
                 return Response({"message": "No jobs found"}, status=status.HTTP_404_NOT_FOUND)
@@ -32,7 +47,12 @@ class SearchKeyWordView(APIView):
             serializer = JobSerializer(matching_jobs, many=True)
             
 
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response({
+                "start_result": start_result,
+                "end_result": end_result,
+                "total_jobs_count": total_jobs_count,
+                "results": serializer.data
+            }, status=status.HTTP_200_OK)
             
      
         except Exception as e:
