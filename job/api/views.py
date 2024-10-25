@@ -10,16 +10,35 @@ from django.db.models import CharField, TextField
 class SearchKeyWordView(APIView):
 
     def get(self, request):
-        q = request.query_params.get('q')
-        # if not q:
-        #     return Response({"message": "keyword is missing"}, status=status.HTTP_400_BAD_REQUEST)
+        q = request.query_params.get('q', None)
+        pay_from = request.query_params.get('pay_from', None)
+        pay_to = request.query_params.get('pay_to', None)
+        pay_type = request.query_params.get('pay_type', 'annually')
+        print('pay_from: ', pay_from)
+        print('pay_to: ', pay_to)
+        print('pay_type: ', pay_type)
 
         try:
             #filter from all CharField and TextField
             query = Q()
-            for field in Job._meta.fields:
-                if isinstance(field, (CharField, TextField)):  
-                    query |= Q(**{f"{field.name}__icontains": q})
+            if q:
+                for field in Job._meta.fields:
+                    if isinstance(field, (CharField, TextField)):  
+                        query |= Q(**{f"{field.name}__icontains": q})
+            
+            if pay_from or pay_to:
+                conversion_factors = {
+                    'annually': 1,
+                    'monthly': 12,
+                    'daily': 365,
+                    'hourly': 365 * 8,
+                }
+                factor = conversion_factors.get(pay_type, 1)
+
+                if pay_from is not None:
+                    query &= Q(salary_min__gte=int(pay_from) * factor)
+                if pay_to is not None:
+                    query &= Q(salary_max__lte=int(pay_to) * factor)
 
             # Pagination parameters: page number and page size
             page_size = 10  
@@ -37,16 +56,20 @@ class SearchKeyWordView(APIView):
             end_result = min(limit, total_jobs_count)
 
             #order the result: title includes keyword will be in the front 
-            matching_jobs = Job.objects.filter(query).annotate(
+            matching_jobs = Job.objects.filter(query)
+            
+            if q:
+                matching_jobs = matching_jobs.annotate(
                 is_in_title=Coalesce(Q(title__icontains=q), Value(False), output_field=BooleanField())
-            ).order_by('-is_in_title', '-posted_date').distinct()[offset:limit]
+            ).order_by('-is_in_title')
     
+            matching_jobs = matching_jobs.order_by('-posted_date').distinct()[offset:limit]
+            
             if not matching_jobs.exists():
                 return Response({"message": "No jobs found"}, status=status.HTTP_404_NOT_FOUND)
 
             serializer = JobSerializer(matching_jobs, many=True)
             
-
             return Response({
                 "start_result": start_result,
                 "end_result": end_result,
