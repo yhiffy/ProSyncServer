@@ -10,13 +10,11 @@ from django.db.models import CharField, TextField
 class SearchKeyWordView(APIView):
 
     def get(self, request):
+
         q = request.query_params.get('q', None)
         pay_from = request.query_params.get('pay_from', None)
         pay_to = request.query_params.get('pay_to', None)
         pay_type = request.query_params.get('pay_type', 'annually')
-        print('pay_from: ', pay_from)
-        print('pay_to: ', pay_to)
-        print('pay_type: ', pay_type)
 
         try:
             #filter from all CharField and TextField
@@ -68,7 +66,7 @@ class SearchKeyWordView(APIView):
             if not matching_jobs.exists():
                 return Response({"message": "No jobs found"}, status=status.HTTP_404_NOT_FOUND)
 
-            serializer = JobSerializer(matching_jobs, many=True)
+            serializer = JobSerializer(matching_jobs, fields=['id', 'title', 'city', 'salary_min', 'salary_max'] ,many=True)
             
             return Response({
                 "start_result": start_result,
@@ -76,6 +74,32 @@ class SearchKeyWordView(APIView):
                 "total_jobs_count": total_jobs_count,
                 "results": serializer.data
             }, status=status.HTTP_200_OK)
+            
+     
+        except Exception as e:
+            print(f"Error: {e}")
+            return Response({"message": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class FetchSingleJobView(APIView):
+
+    def get(self, request):
+        id = request.query_params.get('id')
+        if not id:
+            return Response({"message": "Job id is missing"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            existing_job = Job.objects.get(id=id)
+
+            serializer = JobSerializer(existing_job)
+
+            if not existing_job:
+                return Response({'message': 'Invalid job'},status=status.HTTP_404_NOT_FOUND)
+            
+
+            return Response({
+                "data": serializer.data
+            }, status=status.HTTP_200_OK)
+            
             
      
         except Exception as e:
