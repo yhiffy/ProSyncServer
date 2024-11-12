@@ -40,3 +40,6 @@ class JobBookmark(models.Model):
 
     class Meta:
         unique_together = ('user', 'job')
+
+    def __str__(self):
+        return f"JobBookmark for {self.user} - {self.job.title}"

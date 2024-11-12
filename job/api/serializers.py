@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Job
+from ..models import Job,JobBookmark
 
 
 class JobSerializer(serializers.ModelSerializer):
@@ -20,5 +20,10 @@ class JobSerializer(serializers.ModelSerializer):
                 self.fields.pop(field_name)
 
 
+class JobBookmarkSerializer(serializers.ModelSerializer):
+    job = JobSerializer()  
 
+    class Meta:
+        model = JobBookmark
+        fields = ['id', 'job', 'saved_at']
 

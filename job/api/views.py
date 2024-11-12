@@ -1,8 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from ..models import Job
-from .serializers import JobSerializer
+from ..models import Job,JobBookmark
+from .serializers import JobSerializer,JobBookmarkSerializer
 from django.db.models import Q, Value, BooleanField
 from django.db.models.functions import Coalesce
 from django.db.models import CharField, TextField
@@ -17,6 +17,7 @@ class SearchKeyWordView(APIView):
         pay_to = request.query_params.get('pay_to', None)
         pay_type = request.query_params.get('pay_type', 'annually')
         job_type = request.query_params.get('job_type', None)
+        industry = request.query_params.get('industry', None)
 
         try:
             #filter from all CharField and TextField
@@ -53,6 +54,12 @@ class SearchKeyWordView(APIView):
                         job_types.append(mapped_type)
                 if job_types:
                     query &= Q(job_type__in=job_types)
+            
+            if industry:
+                industryList = []
+                for i in industry.split(','):
+                    industryList.append(i)
+                query &= Q(industry__in=industryList)
 
             # Pagination parameters: page number and page size
             page_size = 10  
@@ -80,6 +87,14 @@ class SearchKeyWordView(APIView):
                 count = item['count']
                 job_type_count[job_type] += count
             
+            industry_cal = matching_jobs.values('industry').annotate(count=Count('industry'))
+
+            # industry_count = {}
+            # for item in industry_cal:
+            #     industry = item['industry']
+            #     count = item['count']
+            #     industry_count[industry] += count
+
             if q:
                 matching_jobs = matching_jobs.annotate(
                 is_in_title=Coalesce(Q(title__icontains=q), Value(False), output_field=BooleanField())
@@ -97,6 +112,7 @@ class SearchKeyWordView(APIView):
                 "end_result": end_result,
                 "total_jobs_count": total_jobs_count,
                 "job_type_count":job_type_count,
+                "industry_count":industry_cal,
                 "results": serializer.data
             }, status=status.HTTP_200_OK)
             
@@ -127,6 +143,31 @@ class FetchSingleJobView(APIView):
             
             
      
+        except Exception as e:
+            print(f"Error: {e}")
+            return Response({"message": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+class FetchSaveJobListView(APIView):
+
+    def get(self, request):
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response({"message": "user id is missing"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            jobList = JobBookmark.objects.filter(user_id=user_id)
+            
+            if not jobList:
+                return Response({'message': 'no saved job'},status=status.HTTP_404_NOT_FOUND)
+ 
+
+            serializer = JobBookmarkSerializer(jobList, many=True)
+
+            return Response({
+                "data": serializer.data
+            }, status=status.HTTP_200_OK)
+        
         except Exception as e:
             print(f"Error: {e}")
             return Response({"message": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
